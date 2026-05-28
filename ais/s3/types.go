@@ -23,12 +23,18 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
 
-// NOTE: do not rename structs that have `xml` tags. The names of those structs
-// become a top level tag of resulting XML, and those tags S3-compatible
-// clients require.
+// NOTE: for structs without an `XMLName` field, the Go struct name becomes the
+// top-level tag of the resulting XML, and those tags S3-compatible clients require.
+// Do not rename such structs.
+//
+// Where the spec's root element name differs from our struct name, we pin it
+// explicitly via `XMLName xml.Name` (below) so the wire format stays AWS-spec
+// compliant regardless of the Go identifier. Strict-parsing clients (e.g. the
+// AWS Rust SDK, used by s3dlio) reject non-spec root tags.
 type (
-	// List objects response
+	// List objects response — emits <ListBucketResult> per AWS S3 ListObjectsV2 spec
 	ListObjectResult struct {
+		XMLName               xml.Name        `xml:"ListBucketResult"`
 		Name                  string          `xml:"Name"`
 		Ns                    string          `xml:"xmlns,attr"`
 		Prefix                string          `xml:"Prefix"`
@@ -57,11 +63,12 @@ type (
 		ETag         string `xml:"ETag"`
 	}
 
-	// Multipart upload start response
+	// Multipart upload start response — emits <InitiateMultipartUploadResult> per AWS S3 spec
 	InitiateMptUploadResult struct {
-		Bucket   string `xml:"Bucket"`
-		Key      string `xml:"Key"`
-		UploadID string `xml:"UploadId"`
+		XMLName  xml.Name `xml:"InitiateMultipartUploadResult"`
+		Bucket   string   `xml:"Bucket"`
+		Key      string   `xml:"Key"`
+		UploadID string   `xml:"UploadId"`
 	}
 
 	// Multipart upload completion request
@@ -69,11 +76,12 @@ type (
 		Parts []types.CompletedPart `xml:"Part"`
 	}
 
-	// Multipart upload completion response
+	// Multipart upload completion response — emits <CompleteMultipartUploadResult> per AWS S3 spec
 	CompleteMptUploadResult struct {
-		Bucket string `xml:"Bucket"`
-		Key    string `xml:"Key"`
-		ETag   string `xml:"ETag"`
+		XMLName xml.Name `xml:"CompleteMultipartUploadResult"`
+		Bucket  string   `xml:"Bucket"`
+		Key     string   `xml:"Key"`
+		ETag    string   `xml:"ETag"`
 	}
 
 	// Multipart uploaded parts response
@@ -91,8 +99,9 @@ type (
 		UploadID  string    `xml:"UploadId"`
 	}
 
-	// List of active multipart uploads response
+	// List of active multipart uploads response — emits <ListMultipartUploadsResult> per AWS S3 spec
 	ListMptUploadsResult struct {
+		XMLName        xml.Name           `xml:"ListMultipartUploadsResult"`
 		Bucket         string             `xml:"Bucket"`
 		UploadIDMarker string             `xml:"UploadIdMarker"`
 		Uploads        []UploadInfoResult `xml:"Upload"`
