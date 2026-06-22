@@ -6,6 +6,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -133,6 +134,9 @@ remote:
 
 	if res.Err != nil {
 		resp.Err, resp.Ecode = res.Err, res.ErrCode
+		if bck.IsRemote() {
+			resp.Err = fmt.Errorf("%s: %w", bck.Cname(lom.ObjName), res.Err)
+		}
 		return resp
 	}
 
@@ -144,7 +148,6 @@ remote:
 	}
 	resp.OAH = oah
 	resp.Remote = true
-
 	// [NOTE] ref 6079834
 	// non-trivial limitation: this reader cannot be transmitted to
 	// multiple targets (where we actually rely on real re-opening);
